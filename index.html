@@ -93,14 +93,12 @@
 </div>
 
 <script>
-// 双账号
 let userList = [
     {acc:"admin",pwd:"123456",role:"admin"},
     {acc:"user",pwd:"123456",role:"user"}
 ];
 let nowRole = "";
 
-// 初始设备
 let device = [
     {id:1,name:"三相异步电机",code:"JD-001",status:"在库"},
     {id:2,name:"循环水泵",code:"SB-002",status:"在库"},
@@ -109,7 +107,6 @@ let device = [
 ];
 let repairArr = [];
 
-// 登录
 function denglu(){
     let a = document.getElementById("acc").value;
     let p = document.getElementById("pwd").value;
@@ -126,7 +123,6 @@ function denglu(){
     }
 }
 
-// 权限限制
 function limitPower(){
     if(nowRole === "user"){
         document.getElementById("adminTip").innerText = "（仅管理员可用）";
@@ -135,4 +131,106 @@ function limitPower(){
         document.getElementById("addBtn").classList.add("btn-gray");
         document.getElementById("delBtn").disabled = true;
         document.getElementById("delBtn").classList.remove("btn-red");
-        document.getEle
+        document.getElementById("delBtn").classList.add("btn-gray");
+    }
+}
+
+function loadDevice(){
+    let html = "";
+    let selHtml = "";
+    let repairSel = "";
+    device.forEach(d=>{
+        let statusClass = "";
+        if(d.status === "在库") statusClass = "zc";
+        else if(d.status === "借出") statusClass = "jc";
+        else statusClass = "wx";
+
+        html += `
+        <div class="item">
+            <b>${d.name}</b> (${d.code})
+            <span class="status ${statusClass}" style="float:right;">${d.status}</span>
+        </div>`;
+
+        selHtml += `<option value="${d.id}">${d.name}(${d.status})</option>`;
+        repairSel += `<option value="${d.id}">${d.name}</option>`;
+    });
+    document.getElementById("allDevice").innerHTML = html;
+    document.getElementById("selDevice").innerHTML = selHtml;
+    document.getElementById("delDevice").innerHTML = selHtml;
+    document.getElementById("repairDev").innerHTML = repairSel;
+}
+
+function addDevice(){
+    let name = document.getElementById("dName").value;
+    let code = document.getElementById("dCode").value;
+    let status = document.getElementById("dStatus").value;
+    if(!name || !code) return alert("请填写完整信息");
+    let newId = device.length + 1;
+    device.push({id:newId,name,code,status});
+    loadDevice();
+    alert("添加成功");
+    document.getElementById("dName").value = "";
+    document.getElementById("dCode").value = "";
+}
+
+function delDevice(){
+    let id = parseInt(document.getElementById("delDevice").value);
+    if(confirm("确定删除？")){
+        device = device.filter(d=>d.id!==id);
+        loadDevice();
+        alert("已删除");
+    }
+}
+
+function jiechu(){
+    let id = parseInt(document.getElementById("selDevice").value);
+    let d = device.find(x=>x.id===id);
+    if(d.status !== "在库") return alert("设备不在库中，无法借出");
+    d.status = "借出";
+    loadDevice();
+    alert("借出成功");
+}
+
+function guihuan(){
+    let id = parseInt(document.getElementById("selDevice").value);
+    let d = device.find(x=>x.id===id);
+    if(d.status !== "借出") return alert("设备未借出，无需归还");
+    d.status = "在库";
+    loadDevice();
+    alert("归还成功");
+}
+
+function addRepair(){
+    let id = parseInt(document.getElementById("repairDev").value);
+    let text = document.getElementById("repairText").value;
+    if(!text) return alert("请填写故障描述");
+    let d = device.find(x=>x.id===id);
+    d.status = "维修";
+    repairArr.push({
+        name:d.name,
+        text:text,
+        time:new Date().toLocaleString()
+    });
+    loadRepair();
+    loadDevice();
+    alert("报修成功");
+    document.getElementById("repairText").value = "";
+}
+
+function loadRepair(){
+    let html = "";
+    repairArr.forEach(r=>{
+        html += `<div class="item"><b>${r.name}</b><br>${r.text}<br><small>${r.time}</small></div>`;
+    });
+    document.getElementById("repairList").innerHTML = html;
+}
+
+function switchPage(n,dom){
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.querySelectorAll(".nav div").forEach(d=>d.classList.remove("active"));
+    document.getElementById("page"+n).classList.add("active");
+    dom.classList.add("active");
+}
+</script>
+</body>
+</html>

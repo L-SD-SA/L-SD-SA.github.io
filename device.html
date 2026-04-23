@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>机电设备管理系统</title>
+    <style>
+        body{background:#f5f7fa;font-family:微软雅黑;margin:0;padding-bottom:90px;}
+        .login{width:320px;margin:80px auto;background:#fff;padding:30px;border-radius:10px;}
+        input,select,textarea{width:100%;padding:10px;margin:8px 0;border:1px solid #ccc;border-radius:5px;}
+        button{padding:10px;border:none;border-radius:5px;cursor:pointer;margin:4px 0;}
+        .btn-blue{background:#0066cc;color:#fff;}
+        .btn-green{background:#28a745;color:#fff;}
+        .btn-orange{background:#fd7e14;color:#fff;}
+        .btn-red{background:#dc3545;color:#fff;}
+        .btn-gray{background:#999;color:#fff;}
+        .hide{display:none;}
+        .box{padding:15px;}
+        .status{padding:3px 8px;border-radius:3px;color:#fff;font-size:12px;}
+        .zc{background:green;}
+        .jc{background:#ff9800;}
+        .wx{background:red;}
+        .nav{position:fixed;bottom:0;left:0;width:100%;display:flex;background:#fff;border-top:1px solid #eee;}
+        .nav div{flex:1;text-align:center;padding:12px;}
+        .nav div.active{color:#0066cc;border-top:3px solid #0066cc;}
+        .page{display:none;}
+        .page.active{display:block;}
+        .item{background:#fff;padding:12px;border-radius:6px;margin:8px 0;}
+    </style>
+</head>
+<body>
+
+<div class="login" id="loginBox">
+    <h3 style="text-align:center;">机电设备管理系统</h3>
+    <input type="text" id="acc" placeholder="账号">
+    <input type="password" id="pwd" placeholder="密码">
+    <button class="btn-blue" onclick="denglu()">立即登录</button>
+    <p style="font-size:12px;color:#666;text-align:center;margin-top:10px;">
+    管理员：admin ｜ 密码：123456<br>
+    普通用户：user ｜ 密码：123456
+    </p >
+</div>
+
+<div id="mainBox" class="hide">
+    <div class="page active" id="page1">
+        <div class="box">
+            <h3>📊 设备实时状态</h3>
+            <div id="allDevice"></div>
+        </div>
+    </div>
+
+    <div class="page" id="page2">
+        <div class="box">
+            <h3>➕ 新增设备 <span id="adminTip" style="color:red;font-size:12px;"></span></h3>
+            <input type="text" id="dName" placeholder="设备名称">
+            <input type="text" id="dCode" placeholder="设备编号">
+            <select id="dStatus">
+                <option value="在库">在库</option>
+                <option value="借出">借出</option>
+                <option value="维修">维修</option>
+            </select>
+            <button class="btn-green" id="addBtn" onclick="addDevice()">添加设备</button>
+
+            <hr style="margin:20px 0;">
+            <h3>🗑️ 删除设备</h3>
+            <select id="delDevice"></select>
+            <button class="btn-red" id="delBtn" onclick="delDevice()">删除设备</button>
+        </div>
+    </div>
+
+    <div class="page" id="page3">
+        <div class="box">
+            <h3>🔁 设备借出 / 归还</h3>
+            <select id="selDevice"></select>
+            <button class="btn-orange" onclick="jiechu()">借出设备</button>
+            <button class="btn-green" onclick="guihuan()">归还设备</button>
+
+            <hr style="margin:20px 0;">
+            <h3>🛠️ 故障报修</h3>
+            <select id="repairDev"></select>
+            <textarea id="repairText" placeholder="填写故障描述"></textarea>
+            <button class="btn-red" onclick="addRepair()">提交报修</button>
+            <h4>报修记录</h4>
+            <div id="repairList"></div>
+        </div>
+    </div>
+
+    <div class="nav">
+        <div class="active" onclick="switchPage(1,this)">首页</div>
+        <div onclick="switchPage(2,this)">设备管理</div>
+        <div onclick="switchPage(3,this)">借还报修</div>
+    </div>
+</div>
+
+<script>
+// 双账号
+let userList = [
+    {acc:"admin",pwd:"123456",role:"admin"},
+    {acc:"user",pwd:"123456",role:"user"}
+];
+let nowRole = "";
+
+// 初始设备
+let device = [
+    {id:1,name:"三相异步电机",code:"JD-001",status:"在库"},
+    {id:2,name:"循环水泵",code:"SB-002",status:"在库"},
+    {id:3,name:"离心风机",code:"FJ-003",status:"维修"},
+    {id:4,name:"切割机",code:"JG-004",status:"借出"}
+];
+let repairArr = [];
+
+// 登录
+function denglu(){
+    let a = document.getElementById("acc").value;
+    let p = document.getElementById("pwd").value;
+    let u = userList.find(x=>x.acc===a&&x.pwd===p);
+    if(u){
+        nowRole = u.role;
+        document.getElementById("loginBox").classList.add("hide");
+        document.getElementById("mainBox").classList.remove("hide");
+        limitPower();
+        loadDevice();
+        loadRepair();
+    }else{
+        alert("账号或密码错误");
+    }
+}
+
+// 权限限制
+function limitPower(){
+    if(nowRole === "user"){
+        document.getElementById("adminTip").innerText = "（仅管理员可用）";
+        document.getElementById("addBtn").disabled = true;
+        document.getElementById("addBtn").classList.remove("btn-green");
+        document.getElementById("addBtn").classList.add("btn-gray");
+        document.getElementById("delBtn").disabled = true;
+        document.getElementById("delBtn").classList.remove("btn-red");
+        document.getEle
